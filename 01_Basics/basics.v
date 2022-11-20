@@ -1,3 +1,5 @@
+(* https://softwarefoundations.cis.upenn.edu/lf-current/Basics.html *)
+
 Inductive day : Type :=
   | monday
   | tuesday
