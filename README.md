@@ -3,4 +3,5 @@ Completed exercises for the [Software Foundations textbook](https://softwarefoun
 
 ## Setup
 
-Run `./generate_makefile.sh` to generate `Makefile` and `Makefile.conf` files. These allow you to compile `.v` Coq source files such that they can be `Require`d in other Coq source files.
+1. Run `./generate_makefile.sh` to generate `Makefile` and `Makefile.conf` files. 
+2. Run `make` to compile `.v` Coq source files such that they can be `Require`d in other Coq source files.
