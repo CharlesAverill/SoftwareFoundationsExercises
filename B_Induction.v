@@ -1,3 +1,5 @@
+(* https://softwarefoundations.cis.upenn.edu/lf-current/Induction.html *)
+
 From LF Require Export A_Basics.
 
 Theorem add_0_r_firsttry : forall n:nat,
