@@ -141,7 +141,7 @@ Qed.
           S (n' + m) = (S n') + m
           and again as
           S (n' + m) = S (n' + m)
-          By the refl property, P(S n')
+          By reflexivity, P(S n')
           is true
         
         Qed
@@ -152,13 +152,13 @@ Qed.
 
     Proof:
         - First, we must show that (0 =? 0) = true.
-          This is clear by the refl property.
+          This is clear by reflexivity.
         - Next, suppose that n = S n', such that
           (n' =? n') = true. We must prove that
           (S n' =? S n') = true. We can simplify
           this as 
           (n' =? n') = true, which is clear by
-          the refl property.
+          reflexivity.
         Qed
 *)
 
@@ -200,4 +200,270 @@ Proof.
         simpl. rewrite -> mul_0_r. reflexivity.
     - (* n = S n' *)
         simpl. rewrite -> mul_n_Sk. rewrite -> IHn'. reflexivity.
+Qed.
+
+Check leb.
+
+Theorem n_le_sum_n_m : forall n m : nat,
+    (n <=? n + m) = true.
+Proof.
+    intros n m. induction n as [| n' IHn' ].
+    - (* n = 0 *)
+        simpl. reflexivity.
+    - (* n = S n' *)
+        simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Theorem plus_leb_compat_l : forall n m p : nat,
+    n <=? m = true -> (p + n) <=? (p + m) = true.
+Proof.
+    intros n m p H. induction n as [| n' IHn' ].
+    - (* n = 0 *)
+        simpl. rewrite -> add_0_r_firsttry. 
+        rewrite -> n_le_sum_n_m. reflexivity.
+    - (* n = S n' *)
+        induction p as [| p' IHp' ].
+        -- (* p = 0 *)
+            rewrite -> add_comm, add_0_r_firsttry, add_comm, add_0_r_firsttry.
+            rewrite -> H. reflexivity.
+        -- (* p = S n' *)
+            simpl.
+            (* I'm stuck here :( I'll hopefully figure this out later though *)
+            Admitted.
+
+Theorem leb_refl : forall n:nat,
+    (n <=? n) = true.
+Proof.
+    intros n. induction n as [| n' IHn' ].
+    - (* n = 0 *)
+        simpl. reflexivity.
+    - (* n = S n' *)
+        simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Theorem zero_neqb_S : forall n:nat,
+    0 =? (S n) = false.
+Proof.
+    intros n. reflexivity.
+Qed.
+
+Theorem andb_false_r : forall b : bool,
+    andb b false = false.
+Proof.
+    intros b. destruct b eqn : E.
+    - (* b = true *) 
+        simpl. reflexivity.
+    - (* b = false *)
+        simpl. reflexivity.
+Qed.
+
+Theorem S_neqb_0 : forall n:nat,
+    (S n) =? 0 = false.
+Proof.
+    intros n. reflexivity.
+Qed.
+
+Theorem mult_1_l : forall n:nat, 
+    1 * n = n.
+Proof.
+    intros n. simpl. rewrite -> add_0_r_firsttry. reflexivity.
+Qed.
+
+Theorem all3_spec : forall b c : bool,
+    orb
+        (andb b c)
+        (orb (negb b)
+            (negb c))
+    = true.
+Proof.
+    intros b c. destruct b eqn : Eb.
+    - (* b = true *)        
+        simpl. destruct c eqn : Ec1.
+        -- reflexivity.
+        -- reflexivity.
+    - (* b = false *)
+        simpl. reflexivity.
+Qed.
+
+Theorem mult_plus_distr_r : forall n m p : nat,
+    (n + m) * p = (n * p) + (m * p).
+Proof.
+    intros n m p. induction n as [| n' IHn' ].
+    - (* n = 0 *) 
+        simpl. reflexivity.
+    - (* n = S n' *)
+        simpl. rewrite -> IHn'. rewrite -> add_assoc. reflexivity.
+Qed.
+
+Theorem mult_assoc : forall n m p : nat,
+    n * (m * p) = (n * m) * p.
+Proof.
+    intros n m p. induction n as [| n' IHn' ].
+    - (* n = 0 *)
+        simpl. reflexivity.
+    - (* n = S n' *)
+        simpl. rewrite -> IHn'. rewrite -> mult_plus_distr_r. reflexivity.
+Qed.
+
+Theorem add_shuffle3' : forall n m p : nat,
+    n + (m + p) = m + (n + p).
+Proof.
+    intros n m p.
+    rewrite -> add_comm. rewrite <- add_assoc.
+    replace (p + n) with (n + p).
+    - reflexivity.
+    - rewrite -> add_comm. reflexivity.
+Qed.
+
+Fixpoint incr (m : bin) : bin :=
+  match m with
+  | Z => B_1 Z
+  | B_0 b => B_1 b
+  | B_1 b => B_0 (incr b)
+  end.
+
+Fixpoint bin_to_nat (m : bin) : nat :=
+match m with
+| Z => 0
+| B_0 b => mult 2 (bin_to_nat b)
+| B_1 b => plus 1 (mult 2 (bin_to_nat b))
+end.
+
+Theorem S_S_assoc : forall x y : nat,
+  S x + S y = S (S (x + y)).
+Proof.
+    intros x y. induction x as [| x' IHx' ].
+    - (* x = 0 *)
+        simpl. reflexivity.
+    - (* x = IHx' *)
+        simpl. rewrite <- IHx'. simpl. reflexivity.
+Qed.
+
+Theorem bin_to_nat_pres_incr : forall b : bin,
+    bin_to_nat (incr b) = 1 + bin_to_nat b.
+Proof.
+    intros b. induction b as [| b' | b'' ].
+    - (* b = Z *)
+        simpl. reflexivity.
+    - (* b = B_0 b' *)
+        simpl. reflexivity.
+    - (* b = B_1 b' *)
+        simpl. rewrite -> IHb'', add_0_r_firsttry, add_0_r_firsttry, S_S_assoc.
+        reflexivity.
+Qed.
+
+Fixpoint nat_to_bin (n:nat) : bin :=
+    match n with
+    | 0 => Z
+    | S n' => incr (nat_to_bin n')
+    end.
+
+Example nat_to_bin_0: nat_to_bin 0 = Z.
+Proof. simpl. reflexivity. Qed.
+Example nat_to_bin_1: nat_to_bin 1 = B_1 (Z).
+Proof. simpl. reflexivity. Qed.
+Example nat_to_bin_100: nat_to_bin 100 = B_0 (B_0 (B_1 (B_0 (B_0 (B_1 (B_1 (Z))))))).
+Proof. simpl. reflexivity. Qed.
+
+Theorem nat_bin_nat : forall n, 
+    bin_to_nat (nat_to_bin n) = n.
+Proof.
+    intros n. induction n as [| n' IHn' ].
+    - (* n = 0 *)
+        simpl. reflexivity.
+    - (* n = S n' *)
+        simpl. rewrite -> bin_to_nat_pres_incr. 
+        simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Lemma double_incr : forall n : nat, 
+    double (S n) = S (S (double n)).
+Proof.
+    intros n. induction n as [| n' IHn' ].
+    - (* n = 0 *)
+        simpl. reflexivity.
+    - (* n = S n' *)
+        simpl. reflexivity.
+Qed.
+
+Definition double_bin (b:bin) : bin :=
+    match b with 
+    | Z => Z
+    | _ => B_0 (b)
+    end.
+
+Example double_bin_zero : double_bin Z = Z.
+Proof. simpl. reflexivity. Qed.
+
+Lemma double_incr_bin : forall b,
+    double_bin (incr b) = incr (incr (double_bin b)).
+Proof.
+    intros b. destruct b.
+    - (* b = Z *)
+        simpl. reflexivity.
+    - (* b = B_0 b' *)
+        simpl. reflexivity.
+    - (* b = B_1 b' *)
+        simpl. reflexivity.
+Qed.
+
+(*
+    Theorem bin_nat_bin_fails : ∀ b, nat_to_bin (bin_to_nat b) = b.
+    Abort.
+
+    This theorem fails because there are an infinite amount of binary
+    representations for any given number. This is accomplished by
+    prepending 0s to the left side of the number (the right side for
+    our reversed representation.)
+*)
+
+Fixpoint normalize (b:bin) : bin :=
+    match b with
+    | Z => Z
+    | B_0 b' => double_bin (normalize b')
+    | B_1 b' => B_1 (normalize b')
+    end.
+
+Example normalize_test_1 : normalize (B_0 (B_0 (Z))) = Z.
+Proof. simpl. reflexivity. Qed.
+Example normalize_test_2 : normalize (B_0 (B_1 (B_0 (Z)))) = B_0 (B_1 (Z)).
+Proof. simpl. reflexivity. Qed.
+
+Lemma nat_to_bin_double : forall n, 
+    nat_to_bin (double n) = double_bin (nat_to_bin n).
+Proof.
+    intros n. induction n as [| n' IHn' ].
+    - (* n = 0 *)
+        simpl. reflexivity.
+    - (* n = S n' *)
+        simpl. rewrite -> IHn', double_incr_bin. reflexivity.
+Qed.
+
+Lemma incr_double : forall b, 
+    incr (double_bin b) = B_1 b.
+Proof.
+    intros b. destruct b eqn : E.
+    - (* b = Z *)
+        simpl. reflexivity.
+    - (* b = B_0 b' *)
+        simpl. reflexivity.
+    - (* b = B_1 b' *)
+        simpl. reflexivity.
+Qed.
+
+Theorem bin_nat_bin : forall b, 
+    nat_to_bin (bin_to_nat b) = normalize b.
+Proof.
+    intros b. induction b as [| b' | b' ].
+    - (* b = Z *)
+        simpl. reflexivity.
+    - (* b = B_0 b' *)
+        simpl. rewrite -> add_0_r_firsttry. 
+        rewrite <- double_plus.
+        rewrite -> nat_to_bin_double, IHb'. reflexivity.
+    - (* b = B_1 b' *)
+        simpl. rewrite -> add_0_r_firsttry.
+        rewrite <- double_plus.
+        rewrite -> nat_to_bin_double, IHb', incr_double.
+        reflexivity.
 Qed.
