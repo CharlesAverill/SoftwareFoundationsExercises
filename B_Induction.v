@@ -2,7 +2,7 @@
 
 From LF Require Export A_Basics.
 
-Theorem add_0_r_firsttry : forall n:nat,
+Theorem add_0_r : forall n:nat,
     n + 0 = n.
 Proof.
     intros n. induction n as [| n' IHn'].
@@ -47,7 +47,7 @@ Theorem add_comm : forall n m : nat,
 Proof.
     intros n m. induction n as [| n' IHn'].
     - (* n = 0 *)
-        simpl. rewrite -> add_0_r_firsttry. reflexivity.
+        simpl. rewrite -> add_0_r. reflexivity.
     - (* n = S n' *)
         simpl. rewrite -> IHn'. rewrite -> plus_n_Sm. reflexivity.
 Qed.
@@ -219,19 +219,12 @@ Qed.
 Theorem plus_leb_compat_l : forall n m p : nat,
     n <=? m = true -> (p + n) <=? (p + m) = true.
 Proof.
-    intros n m p H. induction n as [| n' IHn' ].
-    - (* n = 0 *)
-        simpl. rewrite -> add_0_r_firsttry. 
-        rewrite -> n_le_sum_n_m. reflexivity.
-    - (* n = S n' *)
-        induction p as [| p' IHp' ].
-        -- (* p = 0 *)
-            rewrite -> add_comm, add_0_r_firsttry, add_comm, add_0_r_firsttry.
-            rewrite -> H. reflexivity.
-        -- (* p = S n' *)
-            simpl.
-            (* I'm stuck here :( I'll hopefully figure this out later though *)
-            Admitted.
+    intros n m p H. induction p as [| p' IHp' ].
+    - (* p = 0 *)
+        simpl. rewrite -> H. reflexivity.
+    - (* p = S p' *)
+        simpl. rewrite -> IHp'. reflexivity.
+Qed.
 
 Theorem leb_refl : forall n:nat,
     (n <=? n) = true.
@@ -268,7 +261,7 @@ Qed.
 Theorem mult_1_l : forall n:nat, 
     1 * n = n.
 Proof.
-    intros n. simpl. rewrite -> add_0_r_firsttry. reflexivity.
+    intros n. simpl. rewrite -> add_0_r. reflexivity.
 Qed.
 
 Theorem all3_spec : forall b c : bool,
@@ -350,7 +343,7 @@ Proof.
     - (* b = B_0 b' *)
         simpl. reflexivity.
     - (* b = B_1 b' *)
-        simpl. rewrite -> IHb'', add_0_r_firsttry, add_0_r_firsttry, S_S_assoc.
+        simpl. rewrite -> IHb'', add_0_r, add_0_r, S_S_assoc.
         reflexivity.
 Qed.
 
@@ -460,11 +453,11 @@ Proof.
     - (* b = Z *)
         simpl. reflexivity.
     - (* b = B_0 b' *)
-        simpl. rewrite -> add_0_r_firsttry. 
+        simpl. rewrite -> add_0_r. 
         rewrite <- double_plus.
         rewrite -> nat_to_bin_double, IHb'. reflexivity.
     - (* b = B_1 b' *)
-        simpl. rewrite -> add_0_r_firsttry.
+        simpl. rewrite -> add_0_r.
         rewrite <- double_plus.
         rewrite -> nat_to_bin_double, IHb', incr_double.
         reflexivity.
