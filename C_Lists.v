@@ -1,4 +1,5 @@
-From LF Require Export A_Basics.
+(* https://softwarefoundations.cis.upenn.edu/lf-current/Lists.html *)
+
 From LF Require Export B_Induction.
 
 Inductive natprod : Type :=
@@ -149,8 +150,14 @@ Proof. reflexivity. Qed.
 Example test_countoddmembers3: countoddmembers empty = 0.
 Proof. reflexivity. Qed.
 
-Fixpoint alternate (l1 l2 : natlist) : natlist.
-    Admitted.
+Fixpoint alternate (l1 l2 : natlist) : natlist :=
+    match l1 with
+    | empty => l2
+    | h1 :: t1 => match l2 with 
+        | empty => l1
+        | h2 :: t2 => h1 :: h2 :: (alternate t1 t2)
+        end
+    end.
 
 Example test_alternate1: alternate [1;2;3] [4;5;6] = [1;4;2;5;3;6].
 Proof. reflexivity. Qed.
@@ -160,3 +167,128 @@ Example test_alternate3: alternate [1;2;3] [4] = [1;4;2;3].
 Proof. reflexivity. Qed.
 Example test_alternate4: alternate [] [20;30] = [20;30].
 Proof. reflexivity. Qed.
+
+Definition bag := natlist.
+
+Fixpoint count (v : nat) (s : bag) : nat :=
+    match s with 
+    | empty => 0
+    | h :: t => (count v t) + match (v =? h) with
+        | true => 1
+        | false => 0
+        end
+    end.
+
+Example test_count1: count 1 [1;2;3;1;4;1] = 3.
+Proof. reflexivity. Qed.
+Example test_count2: count 6 [1;2;3;1;4;1] = 0.
+Proof. reflexivity. Qed.
+
+Definition sum : bag -> bag -> bag :=
+    append.
+
+Example test_sum1: count 1 (sum [1;2;3] [1;4;1]) = 3.
+Proof. reflexivity. Qed.
+
+Definition add (v : nat) (s : bag) : bag :=
+    v :: s.
+
+Example test_add1: count 1 (add 1 [1;4;1]) = 3.
+Proof. reflexivity. Qed.
+Example test_add2: count 5 (add 1 [1;4;1]) = 0.
+Proof. reflexivity. Qed.
+
+Definition member (v : nat) (s : bag) : bool :=
+    match (count v s) with 
+    | 0 => false
+    | _ => true
+    end.
+
+Example test_member1: member 1 [1;4;1] = true.
+Proof. reflexivity. Qed.
+Example test_member2: member 2 [1;4;1] = false.
+Proof. reflexivity. Qed.
+
+Fixpoint remove_one (v : nat) (s : bag) : bag :=
+    match s with
+    | empty => empty
+    | h :: t => match (h =? v) with 
+        | true => t
+        | false => h :: remove_one v t
+        end
+    end.
+
+Example test_remove_one1: count 5 (remove_one 5 [2;1;5;4;1]) = 0.
+Proof. reflexivity. Qed.
+Example test_remove_one2: count 5 (remove_one 5 [2;1;4;1]) = 0.
+Proof. reflexivity. Qed.
+Example test_remove_one3: count 4 (remove_one 5 [2;1;4;5;1;4]) = 2.
+Proof. simpl. reflexivity. Qed.
+Example test_remove_one4: count 5 (remove_one 5 [2;1;5;4;5;1;4]) = 1.
+Proof. reflexivity. Qed.
+
+Fixpoint remove_all (v:nat) (s:bag) : bag :=
+    match s with
+    | empty => empty
+    | h :: t => match (h =? v) with
+        | true => remove_all v t
+        | false => h :: remove_all v t
+        end
+    end.
+
+Example test_remove_all1: count 5 (remove_all 5 [2;1;5;4;1]) = 0.
+Proof. reflexivity. Qed.
+Example test_remove_all2: count 5 (remove_all 5 [2;1;4;1]) = 0.
+Proof. reflexivity. Qed.
+Example test_remove_all3: count 4 (remove_all 5 [2;1;4;5;1;4]) = 2.
+Proof. reflexivity. Qed.
+Example test_remove_all4: count 5 (remove_all 5 [2;1;5;4;5;1;4;5;1;4]) = 0.
+Proof. reflexivity. Qed.
+
+Fixpoint included (s1 : bag) (s2 : bag) : bool :=
+    match s1 with
+    | empty => true
+    | h :: t => match (member h s2) with
+        | true => included t (remove_one h s2)
+        | false => false
+        end
+    end.
+
+Example test_included1: included [1;2] [2;1;4;1] = true.
+Proof. reflexivity. Qed.
+Example test_included2: included [1;2;2] [2;1;4;1] = false.
+Proof. reflexivity. Qed.
+
+Lemma beq_nat_refl : forall n, 
+    true = (n =? n).
+Proof.
+    intros n. induction n as [| n' IHn' ].
+    - (* n = 0 *)
+        simpl. reflexivity.
+    - (* n = S n' *)
+        simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Theorem add_inc_count : forall v : nat, forall s : bag,
+    count v (add v s) = 1 + (count v s).
+Proof.
+    intros v s. simpl.
+    rewrite <- beq_nat_refl.
+    rewrite -> add_comm. reflexivity.
+Qed.
+
+Theorem nil_app : forall l : natlist,
+    [] ++ l = l.
+Proof. reflexivity. Qed.
+
+Theorem tl_length_pred : forall l:natlist,
+  pred (length l) = length (cdr l).
+Proof.
+  intros l. destruct l as [| n l'].
+  - (* l = nil *)
+    reflexivity.
+  - (* l = cons n l' *)
+    reflexivity. 
+Qed.
+
+
